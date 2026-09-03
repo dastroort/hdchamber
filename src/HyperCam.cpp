@@ -1,5 +1,6 @@
 #include "Hyper/HyperCam.h"
 #include <string>
+#include <sstream>
 #include <stdexcept>
 #include <cmath>
 
@@ -87,9 +88,13 @@ namespace Hyper
             this->hyperspherical_pos = hyperspherical_pos;
 
         if (this->hyperspherical_pos.size() != this->ambient_dim)
+        {
+            std::stringstream ss;
+            for(auto& coord : hyperspherical_pos) ss << std::to_string(coord) << " "; 
             throw std::invalid_argument(
                 "Expected " + std::to_string(this->ambient_dim) + " hyperspherical coords, got " +
-                std::to_string(this->hyperspherical_pos.size()) + ".");
+                std::to_string(this->hyperspherical_pos.size()) + ".\nInvalid coords: " + ss.str());
+        }
         
         update_cam_matrix();
     }
@@ -138,7 +143,7 @@ namespace Hyper
             size_t n = from_ambient_dim - i;
             std::vector<float> hs_pos;
             if( !hyperspherical_pos_list.empty() && !hyperspherical_pos_list[i].empty() )
-                hs_pos = std::vector<float>(hyperspherical_pos_list[i].begin(), hyperspherical_pos_list[i].end() - i);
+                hs_pos = std::vector<float>(hyperspherical_pos_list[i].begin(), hyperspherical_pos_list[i].end());
             chain.push_back( Hyper::HyperCam(n, hs_pos) );
         }
         return chain;

@@ -76,7 +76,7 @@ async function init() {
         // THREE_DIMENSIONS + 1 (4D): l'ultimo passaggio 4D -> 3D resta escluso
         // di proposito, perché è già gestito da app.camera / hypercamR / OrbitControls.
         const hyperspherical_pos_list_js = [];
-        app.camChain.forEach(cam => {
+        app.camChain.slice(0, -1).forEach(cam => {
             const rad_hyperspherical_pos = cam.hyperspherical_pos.map((t, i) => i!==0 ? degToRad(t) : t);
             hyperspherical_pos_list_js.push(rad_hyperspherical_pos);
         });
