@@ -63,12 +63,13 @@ namespace Hyper
                 throw std::runtime_error("Point too close to camera plane, division unstable.");
 
             const float fact = 1.0f / depth;
+            float shrink_fixer = std::pow(2.5f, p.size() - low_dim); // An unproven rule of thumb that should be taken with a grain of salt.
 
             VectorXf proj(low_dim);
             for (int i = 0; i < low_dim; ++i)
                 proj(i) = p(i) * fact;
 
-            return proj;
+            return proj * shrink_fixer;
         }
     }
 
