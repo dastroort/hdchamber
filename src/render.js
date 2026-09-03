@@ -21,7 +21,7 @@ const AXES_PALETTE = [
     0x00ff00,
     0xff00ff,
     0xf0f000,
-    0xffbbaa
+    0x997733
 ];
 export const RENDER_FUNCS = {};
 let animationId;
