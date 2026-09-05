@@ -152,7 +152,11 @@ function createSyncLoop(frameFn) {
   let animationId = null;
 
   function loop() {
-    frameFn();
+    try {
+      frameFn();
+    } catch (error) {
+      console.error("Error in sync loop, skip this frame:", error);
+    }
     animationId = requestAnimationFrame(loop);
   }
 
@@ -1186,7 +1190,7 @@ function setCamChainHandler() {
   setCamChainList(dropmenu);
 }
 
-function syncRho(stage, stageIndex) {
+function syncRho(stage, stageIndex, isBaseCamera) {
   const rhoSelector = isBaseCamera
     ? ".hypercamera-coords .rho-p input"
     : `.camchain-stage.stage-${stageIndex} .camchain-rho-input`;
@@ -1220,7 +1224,7 @@ const camChainSync = createSyncLoop( () => {
   const lastIndex = APP.camChain.length - 1;
   APP.camChain.forEach((stage, stageIndex) => {
     const isBaseCamera = stageIndex === lastIndex; // ambient_dim === 3, il vecchio "hypercam"
-    syncRho(stage, stageIndex);
+    syncRho(stage, stageIndex, isBaseCamera);
     syncAngles(stage, stageIndex, isBaseCamera);
   });
 });
