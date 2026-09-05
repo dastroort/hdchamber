@@ -139,6 +139,50 @@ function initInput(type, min, max, value, step, classes = [], onEvent = null, ca
   return input;
 }
 
+/**
+ * Creates a synchronization loop based on `requestAnimationFrame`.
+ * Each instance stores its own `animationId` in a private closure,
+ * so that multiple independent sync loops
+ * do not interfere with one another.
+ *
+ * @param {() => void} frameFn - Function executed every frame.
+ * @returns {{ start: () => void, stop: () => void }} Loop controller.
+ */
+function createSyncLoop(frameFn) {
+  let animationId = null;
+
+  function loop() {
+    frameFn();
+    animationId = requestAnimationFrame(loop);
+  }
+
+  return {
+    start() {
+      this.stop(); // prevents duplicate loops if start() is called multiple times
+      animationId = requestAnimationFrame(loop);
+    },
+    stop() {
+      if (animationId !== null) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+    }
+  };
+}
+
+/**
+ * Updates the value of an element only if it does not currently have focus,
+ * so as not to interfere with the user's input while they are typing.
+ *
+ * @param {HTMLInputElement|null} el - The element to update (can be null if not found in the DOM).
+ * @param {number|string} value - The value to assign.
+ */
+function syncValue(el, value) {
+  if (el && document.activeElement !== el) {
+    el.value = value;
+  }
+}
+
 /*
 *
 * ZOOM IN/OUT BUTTON
@@ -419,28 +463,15 @@ function setThetaInputsAndSliders({planes, theta, thetaInputs, thetaSliders}){
   });
 }
 
-let sliderSyncId = null;
-
-function setSliderSync() {
-  cancelAnimationFrame(sliderSyncId);
-
-  function frame() {
-    APP.planes.forEach((plane, i) => {
-      const inputEl = document.querySelector(`.rotation-plane.${plane} .theta-input`);
-      const sliderEl = document.querySelector(`.rotation-plane.${plane} .theta-slider`);
-      if (sliderEl && document.activeElement !== sliderEl) {
-        sliderEl.value = APP.theta[i];
-      }
-      if (inputEl && document.activeElement !== inputEl) {
-        inputEl.value = APP.theta[i]; 
-      }
-    });
-    updateDeveloperDataDiv(developerDataDiv);
-    sliderSyncId = requestAnimationFrame(frame);
-  }
-
-  sliderSyncId = requestAnimationFrame(frame);
-}
+const sliderSync = createSyncLoop( () => {
+  APP.planes.forEach((plane, i) => {
+    const inputEl = document.querySelector(`.rotation-plane.${plane} .theta-input`);
+    const sliderEl = document.querySelector(`.rotation-plane.${plane} .theta-slider`);
+    syncValue(sliderEl, APP.theta[i]);
+    syncValue(inputEl, APP.theta[i]);
+  });
+  updateDeveloperDataDiv(developerDataDiv);
+});
 
 function setRandomRotationBtn(handler){
   const randomBtn = handler.dropmenu.querySelector(".tools .random-btn");
@@ -1033,32 +1064,6 @@ function setCameraOptions(){
   setCameraBtn(camera.dropmenu);
 }
 
-let hypercamSyncId = null;
-
-function setHypercamSync(){
-  cancelAnimationFrame(hypercamSyncId);
-
-  function frame(){
-    const titleEl = document.querySelector(".hypercamera-coords .hypercam-title");
-    if(titleEl) titleEl.innerHTML = `Camera ${APP.dimensions}D`;
-
-    HYPERCAM_LABELS.forEach((_, index) => {
-      const inputEl = document.querySelector(`.hypercam-angle.psi-${index} .hypercam-input`);
-      const sliderEl = document.querySelector(`.hypercam-angle.psi-${index} .hypercam-slider`);
-      const value = APP.camChain.at(-1).hyperspherical_pos[index] || 0;
-      const displayValue = value;
-
-      if(sliderEl && document.activeElement !== sliderEl) sliderEl.value = displayValue;
-      if(inputEl && document.activeElement !== inputEl) inputEl.value = displayValue;
-
-      const item = document.querySelector(`.hypercam-angle.psi-${index}`);
-      if(item) item.classList.toggle("hidden", index >= activeHypersphericalCount(APP.dimensions));
-    });
-    hypercamSyncId = requestAnimationFrame(frame);
-  }
-  hypercamSyncId = requestAnimationFrame(frame);
-}
-
 /*
 * =============
 * CAM CHAIN (ipercamere intermedie)
@@ -1210,52 +1215,44 @@ function setCamChainHandler() {
   setCamChainList(dropmenu);
 }
 
-let camChainSyncId = null;
+function syncRho(stage, stageIndex) {
+  const rhoSelector = isBaseCamera
+    ? ".hypercamera-coords .rho-p input"
+    : `.camchain-stage.stage-${stageIndex} .camchain-rho-input`;
+  const rhoInputEl = document.querySelector(rhoSelector);
+  syncValue(rhoInputEl, stage.hyperspherical_pos[0]);
+};
 
-function setCamChainSync() {
-  cancelAnimationFrame(camChainSyncId);
+function syncAngles(stage, stageIndex, isBaseCamera) {
+  stage.hyperspherical_pos.forEach((value, angleIndex) => {
+    if (angleIndex === 0) return; // già gestito sopra come rho
 
-  function frame() {
-    const lastIndex = APP.camChain.length - 1;
+    let inputEl, sliderEl;
 
-    APP.camChain.forEach((stage, stageIndex) => {
-      const isBaseCamera = stageIndex === lastIndex; // ambient_dim === 3, il vecchio "hypercam"
+    if (isBaseCamera) {
+      const psiIndex = angleIndex - 1; // 1->psi-0 (θ), 2->psi-1 (Φ)
+      const selector = `.hypercam-angle.psi-${psiIndex}`;
+      inputEl = document.querySelector(`${selector} .hypercam-input`);
+      sliderEl = document.querySelector(`${selector} .hypercam-slider`);
+    } else {
+      const selector = `.camchain-stage.stage-${stageIndex} .camchain-angle.angle-${angleIndex}`;
+      inputEl = document.querySelector(`${selector} .camchain-input`);
+      sliderEl = document.querySelector(`${selector} .camchain-slider`);
+    }
 
-      // --- RHO (index 0 di hyperspherical_pos) ---
-      const rhoSelector = isBaseCamera
-        ? ".hypercamera-coords .rho-p input"
-        : `.camchain-stage.stage-${stageIndex} .camchain-rho-input`;
-      const rhoInputEl = document.querySelector(rhoSelector);
-      if (rhoInputEl && document.activeElement !== rhoInputEl) {
-        rhoInputEl.value = stage.hyperspherical_pos[0];
-      }
-
-      // --- ANGOLI (index >= 1 di hyperspherical_pos) ---
-      stage.hyperspherical_pos.forEach((value, angleIndex) => {
-        if (angleIndex === 0) return; // già gestito sopra come rho
-
-        let inputEl, sliderEl;
-
-        if (isBaseCamera) {
-          const psiIndex = angleIndex - 1; // 1->psi-0 (θ), 2->psi-1 (Φ)
-          const selector = `.hypercam-angle.psi-${psiIndex}`;
-          inputEl = document.querySelector(`${selector} .hypercam-input`);
-          sliderEl = document.querySelector(`${selector} .hypercam-slider`);
-        } else {
-          const selector = `.camchain-stage.stage-${stageIndex} .camchain-angle.angle-${angleIndex}`;
-          inputEl = document.querySelector(`${selector} .camchain-input`);
-          sliderEl = document.querySelector(`${selector} .camchain-slider`);
-        }
-
-        if (sliderEl && document.activeElement !== sliderEl) sliderEl.value = value;
-        if (inputEl && document.activeElement !== inputEl) inputEl.value = value;
-      });
-    });
-
-    camChainSyncId = requestAnimationFrame(frame);
-  }
-  camChainSyncId = requestAnimationFrame(frame);
+    syncValue(sliderEl, value);
+    syncValue(inputEl, value);
+  });
 }
+
+const camChainSync = createSyncLoop( () => {
+  const lastIndex = APP.camChain.length - 1;
+  APP.camChain.forEach((stage, stageIndex) => {
+    const isBaseCamera = stageIndex === lastIndex; // ambient_dim === 3, il vecchio "hypercam"
+    syncRho(stage, stageIndex);
+    syncAngles(stage, stageIndex, isBaseCamera);
+  });
+});
 
 /*
 * ==============
@@ -1320,10 +1317,10 @@ function addGuiHandlers() {
   setPauseBtn();
   setZoomInBtn();
   setZoomOutBtn();
-  setSliderSync();
   setCameraOptions();
   setDeveloperModeBtn();
-  setCamChainSync();
+  sliderSync.start();
+  camChainSync.start();
   RENDER_FUNCS.setOnCameraChange(updateAndRender);
 }
 
