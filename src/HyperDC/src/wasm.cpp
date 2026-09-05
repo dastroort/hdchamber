@@ -1,6 +1,6 @@
 #include<emscripten/bind.h>
 #include "geolib.cpp"
-#include "Hyper/HyperCam.h"
+#include "../include/HyperCam.h"
 
 emscripten::val vectorFToJs(vector<float> vec)
 {

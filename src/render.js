@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { MathUtils } from 'three';
-import createGeolib from './geolib.js'
+import createGeolib from './wasm/geolib.js'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { degToRad, lerp, radToDeg } from 'three/src/math/MathUtils.js';
 

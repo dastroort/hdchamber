@@ -6,7 +6,7 @@
 #include <thread>
 #include <cmath>
 #include <optional>
-#include "Hyper/HyperCam.h"
+#include "../include/HyperCam.h"
 
 using namespace std;
 using namespace Eigen;
