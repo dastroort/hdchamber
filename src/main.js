@@ -126,7 +126,7 @@ function initInput(type, min, max, value, step, classes = [], onEvent = null, ca
     input.classList.add(...classes);
   } else if (typeof classes === 'string' && classes.trim() !== '') {
     input.classList.add(classes);
-  } else {
+  } else if (!(Array.isArray(classes) && classes.length === 0)) {
     throw new Error("Invalid 'classes' given: ", classes);
   }
 
@@ -661,10 +661,8 @@ function setWikiHandler() {
 
 // CROSS SECTION
 function initHyperplaneNormalInput(hyperplane, value){
-  const input = document.createElement("input");
-  input.type = "number";
-  input.value = value;
-  input.step = 0.01;
+  const input = initInput("number", undefined, undefined, value, 0.01);
+
   if(hyperplane.classList.contains("from")){
     input.addEventListener("input", () => {
       stopHyperplaneAnimation();
@@ -678,11 +676,8 @@ function initHyperplaneNormalInput(hyperplane, value){
 }
 
 function initHyperplaneOffsetInput(hyperplane){
-  const input = document.createElement("input");
-  input.classList.add("offset");
-  input.type = "number";
-  input.value = 0.00;
-  input.step = 0.01;
+  const input = initInput("number", undefined, undefined, 0.00, 0.01, "offset");
+
   if(hyperplane.classList.contains("from")){
       stopHyperplaneAnimation();
       input.addEventListener("input", () => {
@@ -923,37 +918,12 @@ function activeHypersphericalCount(dimensions){
   return Math.max(0, dimensions - 1);
 }
 
-function initHypercamInput(value, index){
-  const input = document.createElement("input");
-  input.setAttribute("type", "number");
-  input.setAttribute("min", 0);
-  input.setAttribute("max", index === 0 ? 360 : 180);
-  input.setAttribute("step", THETA_STEP);
-  input.setAttribute("value", value);
-  input.classList.add("hypercam-input");
-  return input;
-}
-
-function initHypercamSlider(value, index){
-  const slider = document.createElement("input");
-  slider.classList.add("hypercam-slider");
-  slider.setAttribute("type", "range");
-  slider.setAttribute("min", 0);
-  slider.setAttribute("max", index === 0 ? 360 : 180);
-  slider.setAttribute("step", THETA_STEP);
-  slider.setAttribute("value", value);
-  return slider;
-}
-
-function initRhoInput(value){
+function initRhoP(value){
   const rhoP = document.createElement("p");
   rhoP.classList.add("spherical-p", "rho-p");
   rhoP.innerHTML = "\u03C1";
 
-  const input = document.createElement("input");
-  input.setAttribute("type", "number");
-  input.setAttribute("min", 0);
-  input.setAttribute("value", value);
+  const input = initInput("number", 0, undefined, value, 1);
 
   input.addEventListener("keydown", (event) => {
     if(event.key === "Enter"){
@@ -999,11 +969,12 @@ function setHypercamList(dropmenu){
     header.appendChild(labelSpan);
 
     const value = 0;// APP.camera.hypersphericals[index] || 0;
-    const input = initHypercamInput(value, index);
+    const input = initInput("number", 0, index === 0 ? 360 : 180, value, THETA_STEP, "hypercam-input");
+
     header.appendChild(input);
     item.appendChild(header);
 
-    const slider = initHypercamSlider(value, index);
+    const slider = initInput("range", 0, index === 0 ? 360 : 180, value, THETA_STEP, "hypercam-slider");
     item.appendChild(slider);
 
     item.classList.toggle("hidden", index >= activeHypersphericalCount(APP.dimensions));
@@ -1036,7 +1007,7 @@ function setHypercamHandler(){
   }
 
   if(!dropmenu.querySelector(".rho-p")){
-    const rhoP = initRhoInput(APP.camera.radius);
+    const rhoP = initRhoP(APP.camera.radius);
     const hypercamUl = dropmenu.querySelector("ul.hypersphericals");
     hypercamUl.parentNode.insertBefore(rhoP, hypercamUl);
   }
