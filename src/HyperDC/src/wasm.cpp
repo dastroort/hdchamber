@@ -222,7 +222,7 @@ EMSCRIPTEN_BINDINGS(my_module){
     emscripten::function("origin", &origin);
     //emscripten::function("projectPoint", emscripten::select_overload<PointND(const PointND, int)>(&project_point));
     emscripten::function("extendPoint", &extend_point);
-    emscripten::function("hypercamPosMatrix", &hypercam_pos_matrix);
+    // emscripten::function("hypercamPosMatrix", &hypercam_pos_matrix);
     
     // FIX: Specifica esplicitamente il tipo di ritorno per distance
     emscripten::function("distance", emscripten::optional_override([](PointND p, PointND q) -> float {

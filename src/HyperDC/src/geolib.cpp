@@ -177,20 +177,20 @@ MatrixXf create_rotation_matrix(int n, vector<string> planes, vector<float> angl
 // un punto da 'from_ambient_dim' a 'to_ambient_dim'. Non dipende dal punto:
 // va ricalcolata solo quando cambiano gli angoli (es. l'utente ruota la
 // hypercam), non ad ogni vertice/frame.
-MatrixXf hypercam_pos_matrix(const int ambient_dim, const vector<float>& hypersphericals, bool yphiwise = true) {
-    if (hypersphericals.size() != (size_t)(ambient_dim - 1))
-        throw invalid_argument("Expected " + to_string(ambient_dim - 1) + " hyperspherical angles, got " + to_string(hypersphericals.size()) + ".");
+// MatrixXf hypercam_pos_matrix(const int ambient_dim, const vector<float>& hypersphericals, bool yphiwise = true) {
+//     if (hypersphericals.size() != (size_t)(ambient_dim - 1))
+//         throw invalid_argument("Expected " + to_string(ambient_dim - 1) + " hyperspherical angles, got " + to_string(hypersphericals.size()) + ".");
 
-    vector<string> planes;
-    for (int n = 1; n < ambient_dim; ++n)
-        planes.push_back(string(1, AXIS_IDS[n-1]) + string(1, AXIS_IDS[n]));
+//     vector<string> planes;
+//     for (int n = 1; n < ambient_dim; ++n)
+//         planes.push_back(string(1, AXIS_IDS[n-1]) + string(1, AXIS_IDS[n]));
 
-    MatrixXf R = create_rotation_matrix(ambient_dim, planes, hypersphericals);
-    if(!yphiwise) return R;
+//     MatrixXf R = create_rotation_matrix(ambient_dim, planes, hypersphericals);
+//     if(!yphiwise) return R;
 
-    MatrixXf R_fix = create_rotation_matrix(ambient_dim, {"yz", "xy"}, {-hypersphericals[1], -hypersphericals[0]});
-    return R_fix * R;
-}
+//     MatrixXf R_fix = create_rotation_matrix(ambient_dim, {"yz", "xy"}, {-hypersphericals[1], -hypersphericals[0]});
+//     return R_fix * R;
+// }
 
 
 // Applica l'intera catena di camere indipendenti a un punto, una alla volta.
