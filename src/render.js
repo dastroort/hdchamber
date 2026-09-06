@@ -261,6 +261,8 @@ async function init() {
         cancelAnimationFrame(animationId);
         console.timeEnd('cancel')
 
+        if(!app.isPaused) return;
+
         scene.clear();
 
         if(app.dimensions > THREE_DIMENSIONS && app.colorMapMode === "on")

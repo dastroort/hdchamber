@@ -19,7 +19,7 @@ const APP = {
   kValues: [],
   omega: () => APP.kValues.map((k) => k * OMEGA0),
   planes: [],
-  isRendering: false,
+  isPaused: true,
   guiHandlers: {},
   animationId: {},
   selectedObj: null,
@@ -507,9 +507,12 @@ function setClearRotationsBtn(handler){
     handler.kInputs.forEach((input, index) => {
       console.log("Funzione clear!")
       handler.kValues[index] = CLEAN_K;
+      handler.theta[index] = CLEAN_ANGLE;
       input.value = CLEAN_K;
       APP.initialTime = Date.now();
       APP.kValues = handler.kValues;
+      APP.theta = handler.theta;
+      RENDER_FUNCS.setAbsoluteTheta(APP, APP.theta);
       updateAndRender();
     });
   });
@@ -897,10 +900,9 @@ function setPauseBtn(){
   const pauseBtn = document.querySelector(".pause-btn");
   
   pauseBtn.addEventListener("click", ()=>{
-    APP.isRendering = !APP.isRendering;
-    let pauseBtnIcon = pauseBtn.querySelector("img");
+    let pauseBtnIcon = pauseBtn.querySelector("div.icon");
 
-    if(!APP.isRendering){
+    if(!APP.isPaused){
       pauseBtnIcon.style.setProperty('--icon-url', `url('/icons/pause.svg')`);
       pauseBtn.title = "Pause animation";
       APP.initialTime = Date.now();
@@ -908,6 +910,9 @@ function setPauseBtn(){
       pauseBtnIcon.style.setProperty('--icon-url', `url('/icons/resume.svg')`);
       pauseBtn.title = "Resume animation";
     }
+
+    APP.isPaused = !APP.isPaused;
+    updateAndRender();
   });
 }
 
