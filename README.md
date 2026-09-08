@@ -57,7 +57,7 @@ Next, run these commands in your directory:
 ```bash
 # In /path/to/HDchamber
 npm install;
-cd src;
+cd src/HyperDC;
 make wasm;
 npm run dev;
 ```
@@ -65,7 +65,7 @@ npm run dev;
 Make sure `Makefile` constants are matched. These are the default values:
 
 ```bash
-# In /path/to/HDchamber/src/Makefile
+# In /path/to/HDchamber/src/HyperDC/Makefile
 EIGEN = /usr/include/eigen3
 EMSDK = ~/emsdk
 ```
