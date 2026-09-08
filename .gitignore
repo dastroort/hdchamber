@@ -28,3 +28,6 @@ geolib.js
 geolib.wasm
 test.cpp
 test
+
+# Keep wasm directory visible
+!wasm/.gitkeep
