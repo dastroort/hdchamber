@@ -129,8 +129,11 @@ p ul {
 
 input[type=range] {
   -webkit-appearance: none;
+  -moz-appearance: none; /* Aggiunto per Firefox */
+  appearance: none;
   width: 100%;
   box-sizing: border-box;
+  background: transparent; /* Evita sfondi di default strani in alcuni browser */
 }
 
 input[type=range]::-webkit-slider-thumb{
@@ -143,11 +146,29 @@ input[type=range]::-webkit-slider-thumb{
   margin-top: -5px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
 }
 
+input[type=range]::-moz-range-thumb {
+  -moz-appearance: none;
+  appearance: none;
+  height: 16px;
+  width: 8px;
+  border: none; /* Rimuove il bordo di default di Firefox */
+  border-radius: 2px;
+  background-color: var(--text-color);
+  cursor: pointer;
+}
+
 input[type=range]::-webkit-slider-runnable-track{
   -webkit-appearance: none;
   border: 1px solid var(--text-color);
   height: 8px;
-  border-radius: 5px;
+  border-radius: 2px;
+  background-color: var(--bg-color2);
+}
+
+input[type=range]::-moz-range-track {
+  border: 1px solid var(--text-color);
+  height: 8px;
+  border-radius: 2px;
   background-color: var(--bg-color2);
 }
 
